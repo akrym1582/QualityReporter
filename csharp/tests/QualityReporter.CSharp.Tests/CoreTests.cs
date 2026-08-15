@@ -7,3 +7,8 @@ public class CoreTests {
  [Fact] public void Classifier_and_recommendations_are_rule_based(){var f=F("x",9);f.Metrics.LineCoverage=40;f.Risk.ComplexityPercentile=.9;f.Risk.ReworkPercentile=.9;f.Risk.Score=90;f.Activity.Score=f.Activity.EffectiveScore=90;f.Hotspot.PriorityScore=90;HotspotClassifier.Classify([f],new());RecommendationEngine.Generate([f]);Assert.Contains("critical",f.Hotspot.Classifications);Assert.Contains(f.Recommendations,x=>x.Code=="ADD_TEST_BEFORE_REFACTOR"&&x.Evidence.Count>0);}
  [Fact] public void Git_aggregates_dates(){var at=DateTimeOffset.UtcNow.AddDays(-2);var(h,_)=GitHistoryAnalyzer.Aggregate([new("1",at,"a",false,new(){{"a.cs",(1,1)}})],new());Assert.Equal(at,h["a.cs"].FirstCommitAt);Assert.NotNull(h["a.cs"].FileAgeDays);}
 }
+
+public class QualityAxesV14Tests {
+ [Fact] public void Missing_metrics_are_renormalized(){var c=new QualityReporter.CSharp.Analysis.Axes.TestabilityRiskCalculator(new());var s=c.Calculate(new Dictionary<string,double?>{{"untestedComplexity",100},{"lineCoverage",null},{"branchCoverage",null}});Assert.Equal(100,s.Score);Assert.Equal(55,s.AvailableWeight);}
+ [Fact] public void Missing_axis_is_unknown(){var c=new QualityReporter.CSharp.Analysis.Axes.ArchitectureRiskCalculator(new());var s=c.Calculate(new Dictionary<string,double?>{{"changeCoupling",null},{"issues",null}});Assert.Null(s.Score);Assert.Equal("unknown",s.Level);}
+}

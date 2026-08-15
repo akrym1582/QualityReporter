@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qualityreporter.dev/schemas/quality-config.schema.json",
-  "title": "QualityReporter v1.3 configuration",
+  "title": "QualityReporter v1.4 configuration",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -137,6 +137,151 @@
         "minimumTokens": {
           "type": "integer",
           "minimum": 1
+        }
+      }
+    },
+    "qualityAxes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maintainability": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "includeInOverallRisk": {
+              "type": "boolean"
+            },
+            "weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "complexity": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "rework": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "duplication": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "issues": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "methodSize": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "testability": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "includeInOverallRisk": {
+              "type": "boolean"
+            },
+            "weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "untestedComplexity": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "lineCoverage": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "branchCoverage": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "architecture": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "includeInOverallRisk": {
+              "type": "boolean"
+            },
+            "weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "changeCoupling": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "issues": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "knowledge": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "includeInOverallRisk": {
+              "type": "boolean"
+            },
+            "weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ownershipConcentration": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "authorDiversity": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "overallRisk": {
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maintainability": {
+              "type": "number",
+              "minimum": 0
+            },
+            "testability": {
+              "type": "number",
+              "minimum": 0
+            },
+            "architecture": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
         }
       }
     }

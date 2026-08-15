@@ -1,0 +1,2 @@
+import type {AxisScore,Config} from '../model.js';import {axis} from './quality-axis.js';
+export const calculateOverallQualityRisk=(scores:{maintainability:AxisScore;testability:AxisScore;architecture:AxisScore},weights:Config['overallRisk']['weights']):AxisScore=>axis({maintainability:scores.maintainability.score??undefined,testability:scores.testability.score??undefined,architecture:scores.architecture.score??undefined},weights);

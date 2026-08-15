@@ -1,0 +1,1 @@
+namespace QualityReporter.CSharp.Analysis.Axes; public sealed class TestabilityRiskCalculator(TestabilityAxisConfig c):QualityAxisCalculator(new Dictionary<string,double>{{"untestedComplexity",c.Weights.UntestedComplexity},{"lineCoverage",c.Weights.LineCoverage},{"branchCoverage",c.Weights.BranchCoverage}},c.Enabled);

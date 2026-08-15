@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {axis} from '../src/analysis/quality-axis.js';import {calculateOverallQualityRisk} from '../src/analysis/overall-quality-risk.js';
+test('v1.4 axes renormalize missing metrics and preserve unknown',()=>{assert.equal(axis({a:100,b:undefined},{a:20,b:80}).score,100);assert.equal(axis({a:undefined},{a:1}).level,'unknown');});
+test('overall quality excludes activity and knowledge',()=>{const mk=(score:number)=>({score,level:'low' as const,components:{},availableWeight:1});assert.equal(calculateOverallQualityRisk({maintainability:mk(100),testability:mk(0),architecture:mk(0)},{maintainability:50,testability:30,architecture:20}).score,50);});
