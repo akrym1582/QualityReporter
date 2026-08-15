@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace QualityReporter.Trend;
@@ -22,7 +23,7 @@ public enum TrendStatus { Improving, Stable, Deteriorating, RapidlyDeteriorating
 public sealed record TrendPoint(DateTimeOffset At, double Value);
 public sealed class TrendResult
 {
-    [JsonConverter(typeof(JsonStringEnumConverter<TrendStatus>))]
+    [JsonConverter(typeof(SnakeCaseTrendStatusConverter))]
     public TrendStatus Status { get; init; }
     public int Samples { get; init; }
     public double Current { get; init; }
@@ -33,6 +34,7 @@ public sealed class TrendResult
     public int ConsecutiveWorsening { get; init; }
     public bool QualityDrift { get; init; }
 }
+public sealed class SnakeCaseTrendStatusConverter() : JsonStringEnumConverter<TrendStatus>(JsonNamingPolicy.SnakeCaseLower);
 public sealed record NamedTrend(string Scope, string EntityId, string Metric, TrendResult Trend);
 public sealed class TrendReport
 {

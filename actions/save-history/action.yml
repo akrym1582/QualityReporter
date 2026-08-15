@@ -7,7 +7,7 @@ runs:
   using: composite
   steps:
     - shell: bash
-      env: { SNAPSHOT: "${{ inputs.snapshot }}", TREND: "${{ inputs.trend }}" }
+      env: { SNAPSHOT: "${{ inputs.snapshot }}", TREND: "${{ inputs.trend }}", GITHUB_TOKEN: "${{ github.token }}" }
       run: |
         set -euo pipefail
         remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"

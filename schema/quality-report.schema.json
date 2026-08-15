@@ -297,7 +297,6 @@
         "maintainability",
         "testability",
         "architecture",
-        "knowledge",
         "overallQuality",
         "hotspotPriority"
       ],
