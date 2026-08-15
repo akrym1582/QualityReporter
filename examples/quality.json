@@ -1,1 +1,74 @@
-{"historyDays":180,"reworkWindowDays":30,"exclude":["**/bin/**","**/obj/**","**/node_modules/**","**/dist/**","**/build/**","**/coverage/**","**/generated/**"],"coupling":{"maxFilesPerCommit":20,"minCount":3,"minRatio":0.3},"fileMaturity":{"enabled":true,"firstWeekFactor":0.65,"firstMonthFactor":0.8,"criticalRiskBypass":80},"activityWeights":{"change":45,"churn":35,"authors":10,"recency":10},"riskWeights":{"complexity":25,"rework":25,"coverage":20,"coupling":20,"issues":10},"classification":{"highActivity":70,"highComplexityPercentile":0.8,"highReworkPercentile":0.8,"lowCoverage":60,"criticalPriority":80},"functions":{"complexityWarning":15,"complexityCritical":25},"report":{"topHotspots":20,"detailedRecommendations":10}}
+{
+  "historyDays": 180,
+  "reworkWindowDays": 30,
+  "exclude": [
+    "**/bin/**",
+    "**/obj/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/coverage/**",
+    "**/generated/**"
+  ],
+  "coupling": {
+    "maxFilesPerCommit": 20,
+    "minCount": 3,
+    "minRatio": 0.3
+  },
+  "fileMaturity": {
+    "enabled": true,
+    "firstWeekFactor": 0.65,
+    "firstMonthFactor": 0.8,
+    "criticalRiskBypass": 80
+  },
+  "activityWeights": {
+    "change": 45,
+    "churn": 35,
+    "authors": 10,
+    "recency": 10
+  },
+  "riskWeights": {
+    "complexity": 25,
+    "rework": 25,
+    "coverage": 20,
+    "coupling": 20,
+    "issues": 10
+  },
+  "classification": {
+    "highActivity": 70,
+    "highComplexityPercentile": 0.8,
+    "highReworkPercentile": 0.8,
+    "lowCoverage": 60,
+    "criticalPriority": 80
+  },
+  "functions": {
+    "complexityWarning": 15,
+    "complexityCritical": 25
+  },
+  "report": {
+    "topHotspots": 20,
+    "detailedRecommendations": 10
+  },
+  "methodAnalysis": {
+    "enabled": true,
+    "historyEnabled": true,
+    "includeConstructors": true,
+    "includeAccessors": false,
+    "includeLocalFunctions": true,
+    "includeAnonymousFunctions": false,
+    "countLogicalOperators": true,
+    "complexityWarning": 15,
+    "complexityCritical": 25,
+    "coupling": {
+      "enabled": true,
+      "crossFile": false,
+      "maxSymbolsPerCommit": 20,
+      "minCount": 3,
+      "minRatio": 0.3
+    },
+    "renameTracking": {
+      "enabled": false,
+      "similarityThreshold": 0.8
+    }
+  }
+}

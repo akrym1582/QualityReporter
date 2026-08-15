@@ -25,7 +25,7 @@ C# coverage accepts Cobertura. Analyzer diagnostics can be captured from `dotnet
 * **Commit count** is the number of non-merge commits touching a file in the period; **churn** is added plus deleted lines; **author count** uses case-insensitive author email.
 * **Rework rate** is the number of changes occurring within the configured window after a prior change divided by all changes.
 * **Change coupling** records files changed together, excluding commits over the configured file limit and applying minimum count/ratio filters.
-* Current-source **LOC and cyclomatic complexity** are collected per file and function/method. TS/TSX uses the TypeScript Compiler API; TSX is treated as TypeScript. C# uses Roslyn syntax trees.
+* Current-source **LOC and cyclomatic complexity** are collected per file and stable `Symbol`. TS/TSX uses the TypeScript Compiler API; TSX is treated as TypeScript. C# uses Roslyn syntax and semantic models. Symbol IDs are SHA-256 hashes of logical identities rather than line numbers, and nested function complexity is kept out of its parent.
 * Coverage and analyzer/lint issue counts are optional. Coverage risk reverses line coverage so low coverage is risky.
 
 Activity uses change 45%, churn 35%, authors 10%, and recency 10%. Risk separately uses complexity 25%, rework 25%, coverage deficiency 20%, coupling 20%, and issues 10%. Missing metrics are omitted and remaining weights are re-normalized. Levels are Critical ≥80, High ≥60, Medium ≥40, and Low <40; hotspot ranking uses priority rather than risk alone. Baselines identify changes to critical and hotspot status, risk, and priority.
@@ -42,6 +42,10 @@ cd typescript && npm run coverage
 ```
 
 The .NET command writes Cobertura under `TestResults`; the TypeScript command prints a c8 summary and writes `typescript/coverage/coverage-summary.json`. Coverage focuses on independently testable analyzers, parsers, risk/baseline logic, and reporters. Process-launching CLI wiring remains covered by end-to-end smoke checks.
+
+## v1.2 symbol analysis
+
+The `symbols` array is additive to the v1 file model and currently describes methods, constructors, operators, configured accessors/local functions, TypeScript functions and methods, variable-assigned functions, React components, and custom hooks at HEAD. Configure extraction and complexity thresholds with `methodAnalysis`. Existing `functions` output remains available for compatibility. Symbol history, coverage/issue assignment, coupling, scoring, recommendations, and baseline trends are represented in the contract but remain unavailable until history mapping is implemented; missing values must not be interpreted as quality verdicts. Method renames can split identity because rename tracking is disabled by default.
 
 ## Limits
 

@@ -1,1 +1,80 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://qualityreporter.dev/schemas/quality-config.schema.json","title":"QualityReporter v1.1 configuration","type":"object","additionalProperties":false,"properties":{"historyDays":{"type":"integer"},"reworkWindowDays":{"type":"integer"},"exclude":{"type":"array"},"coupling":{"type":"object"},"fileMaturity":{"type":"object"},"activityWeights":{"type":"object"},"riskWeights":{"type":"object"},"classification":{"type":"object"},"functions":{"type":"object"},"report":{"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qualityreporter.dev/schemas/quality-config.schema.json",
+  "title": "QualityReporter v1.2 configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "historyDays": {
+      "type": "integer"
+    },
+    "reworkWindowDays": {
+      "type": "integer"
+    },
+    "exclude": {
+      "type": "array"
+    },
+    "coupling": {
+      "type": "object"
+    },
+    "fileMaturity": {
+      "type": "object"
+    },
+    "activityWeights": {
+      "type": "object"
+    },
+    "riskWeights": {
+      "type": "object"
+    },
+    "classification": {
+      "type": "object"
+    },
+    "functions": {
+      "type": "object"
+    },
+    "report": {
+      "type": "object"
+    },
+    "methodAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "historyEnabled": {
+          "type": "boolean"
+        },
+        "includeConstructors": {
+          "type": "boolean"
+        },
+        "includeAccessors": {
+          "type": "boolean"
+        },
+        "includeLocalFunctions": {
+          "type": "boolean"
+        },
+        "includeAnonymousFunctions": {
+          "type": "boolean"
+        },
+        "countLogicalOperators": {
+          "type": "boolean"
+        },
+        "complexityWarning": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "complexityCritical": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "coupling": {
+          "type": "object"
+        },
+        "renameTracking": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
