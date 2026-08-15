@@ -73,6 +73,29 @@ public sealed class GitAndReportingTests
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
 
+    [Fact]
+    public void Markdown_hotspots_use_quality_axis_priority_instead_of_legacy_risk()
+    {
+        var legacyOnly = new FileResult { Path = "legacy-risk.cs", Risk = new() { Score = 90 }, Scores = ScoresWithPriority(59) };
+        var prioritized = new FileResult { Path = "priority.cs", Risk = new() { Score = 10 }, Scores = ScoresWithPriority(61) };
+        var path = System.IO.Path.GetTempFileName();
+        try
+        {
+            ReportWriter.WriteMarkdown(new Report { Files = [legacyOnly, prioritized] }, path);
+            var text = File.ReadAllText(path);
+
+            Assert.Contains("| Hotspots | 1 |", text);
+            Assert.Contains("priority.cs", text);
+            Assert.DoesNotContain("legacy-risk.cs", text);
+        }
+        finally { File.Delete(path); }
+    }
+
+    private static QualityScores ScoresWithPriority(double priority) => new()
+    {
+        HotspotPriority = new() { Score = priority }
+    };
+
     private static CommitChange Change(string hash, DateTimeOffset at, params string[] files) =>
         new(hash, at, "dev@example.com", false, files.ToDictionary(x => x, _ => (1, 0)));
 }
