@@ -1,58 +1,128 @@
 # QualityReporter
 
-QualityReporter combines static metrics with Git change history to identify **review and maintenance priorities**, not to declare code “good” or “bad”. It is free, local, and split into `quality-csharp` and `quality-ts`; their only shared contract is the schemas and risk definition.
+QualityReporter は、静的メトリクスと Git の変更履歴を組み合わせて、**レビューと保守の優先順位**を見つけるツールです。コードの良し悪しを断定するものではありません。無料でローカル実行でき、`quality-csharp` と `quality-ts` に分かれています。両実装で共有する契約はスキーマとリスク定義だけです。
 
-## Quick start
+## 使い方
 
-Requires .NET 10 and Node.js 20+ (the sample Action uses Node 24). Always use a full clone (`actions/checkout` with `fetch-depth: 0`).
+### 前提
+
+.NET 10 と Node.js 20 以上が必要です（サンプルの GitHub Actions は Node.js 24 を使用します）。Git の変更履歴を解析するため、リポジトリは必ず全履歴で取得してください（`actions/checkout` の `fetch-depth: 0`）。
+
+### C#
 
 ```bash
 dotnet run --project csharp/src/QualityReporter.CSharp -- analyze \
   --solution App.sln --since 180d --coverage coverage.cobertura.xml \
   --analyzer build.log --config quality.json --baseline previous.json \
   --output reports/csharp.json --markdown reports/csharp.md
-
-cd typescript && npm ci && npm run build
-node dist/cli.js analyze --root ../frontend --eslint ../reports/eslint.json \
-  --coverage ../coverage/coverage-final.json --since 180d --config ../quality.json \
-  --baseline ../previous.json --output ../reports/typescript.json --markdown ../reports/typescript.md
 ```
 
-C# coverage accepts Cobertura. Analyzer diagnostics can be captured from `dotnet build` output. TypeScript coverage accepts Istanbul `coverage-final.json`, and lint input is ESLint JSON. Missing optional inputs produce warnings and do not stop analysis.
+`--solution` と `--output` は必須です。`--coverage`、`--analyzer`、`--config`、`--baseline`、`--markdown` は任意です。
 
-## Metrics
+### TypeScript / TSX
 
-* **Commit count** is the number of non-merge commits touching a file in the period; **churn** is added plus deleted lines; **author count** uses case-insensitive author email.
-* **Rework rate** is the number of changes occurring within the configured window after a prior change divided by all changes.
-* **Change coupling** records files changed together, excluding commits over the configured file limit and applying minimum count/ratio filters.
-* Current-source **LOC and cyclomatic complexity** are collected per file and stable `Symbol`. TS/TSX uses the TypeScript Compiler API; TSX is treated as TypeScript. C# uses Roslyn syntax and semantic models. Symbol IDs are SHA-256 hashes of logical identities rather than line numbers, and nested function complexity is kept out of its parent.
-* Coverage and analyzer/lint issue counts are optional. Coverage risk reverses line coverage so low coverage is risky.
+```bash
+cd typescript
+npm ci
+npm run build
+node dist/cli.js analyze --root ../frontend --eslint ../reports/eslint.json \
+  --coverage ../coverage/coverage-final.json --since 180d --config ../quality.json \
+  --baseline ../previous.json --output ../reports/typescript.json \
+  --markdown ../reports/typescript.md
+```
 
-Activity uses change 45%, churn 35%, authors 10%, and recency 10%. Risk separately uses complexity 25%, rework 25%, coverage deficiency 20%, coupling 20%, and issues 10%. Missing metrics are omitted and remaining weights are re-normalized. Levels are Critical ≥80, High ≥60, Medium ≥40, and Low <40; hotspot ranking uses priority rather than risk alone. Baselines identify changes to critical and hotspot status, risk, and priority.
+`--root` と `--output` は必須です。TypeScript では TSX も解析対象になります。任意の入力がない場合は警告になりますが、解析は停止しません。
 
-## Configuration and outputs
+## 静的解析結果の取得方法
 
-Start with [`examples/quality.json`](examples/quality.json). Machine-readable contracts are in [`schema/`](schema/). JSON contains `schemaVersion: 1`; Markdown is designed for `$GITHUB_STEP_SUMMARY`. Exit codes are 0 success, 1 analysis error, and 2 invalid arguments (3 is reserved for future quality gates).
+QualityReporter は解析そのものに加えて、既存ツールが出力したカバレッジ、アナライザー、リンターの結果を読み込みます。入力ファイルは解析対象と同じリポジトリを基準にしたファイルパスを含む必要があります。
 
-## Unit tests and coverage
+### C# のカバレッジとアナライザー
+
+Cobertura 形式のカバレッジを取得する例です。
+
+```bash
+dotnet test App.sln --collect:"XPlat Code Coverage" \
+  --results-directory TestResults
+```
+
+生成された `coverage.cobertura.xml` を `--coverage` に渡してください。実際の生成場所はテストランナーや設定により異なるため、必要に応じて `find TestResults -name coverage.cobertura.xml` で確認します。
+
+`dotnet build` の診断結果は標準出力と標準エラーをファイルに保存し、そのファイルを `--analyzer` に渡します。
+
+```bash
+dotnet build App.sln > build.log 2>&1
+```
+
+C# のアナライザー入力は、たとえば `File.cs(12,3): warning CAxxxx ...` の形式を対象にしています。Roslyn アナライザーやコンパイラー診断を有効にしたビルドを実行してください。
+
+### TypeScript のカバレッジと ESLint
+
+テストランナーが Istanbul 形式を出力する設定でカバレッジを取得します。たとえば c8 では次のように実行できます。
+
+```bash
+cd typescript
+npm run coverage
+```
+
+生成された `coverage/coverage-final.json` を `--coverage` に渡します。別のテストツールを使う場合も、Istanbul の `coverage-final.json` 形式で出力してください。
+
+ESLint の結果は JSON 形式で出力します。
+
+```bash
+npx eslint ../frontend --format json > ../reports/eslint.json
+```
+
+プロジェクトで ESLint の設定やインストール方法が異なる場合は、そのプロジェクトの設定に合わせて実行してください。生成した JSON を `--eslint` に渡すと、エラー・警告・情報の件数がファイルごとに集計されます。
+
+### GitHub Actions で取得する場合
+
+GitHub Actions では、チェックアウト時に全履歴を取得し、各ツールの出力をレポート生成より前に作成します。
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- run: dotnet build App.sln > build.log 2>&1
+- run: dotnet test App.sln --collect:"XPlat Code Coverage"
+- run: npx eslint frontend --format json > reports/eslint.json
+```
+
+生成された JSON、XML、ログのパスを `--coverage`、`--analyzer`、`--eslint` に指定してください。入力が存在しない、または任意入力を省略した場合、そのメトリクスは `Not Available` として警告され、ゼロとして扱われません。
+
+## メトリクス
+
+* **コミット数**は期間内にファイルを変更した非マージコミット数、**変更量（churn）** は追加行数と削除行数の合計、**著者数（author count）** は大文字小文字を区別しない著者メールアドレス数です。
+* **再作業率（rework rate）** は、過去の変更から設定した期間内に発生した変更数を全変更数で割った値です。
+* **変更結合（change coupling）** は同じコミットで一緒に変更されたファイルを記録します。設定したファイル数上限を超えるコミットを除外し、最小件数と比率のフィルターを適用します。
+* 現在のソースから、ファイルごとの LOC と循環的複雑度、および安定した `Symbol` を収集します。TS/TSX は TypeScript Compiler API、C# は Roslyn の構文・セマンティックモデルを使用します。シンボル ID は行番号ではなく論理的な識別情報の SHA-256 ハッシュです。ネストした関数の複雑度は親に重複計上しません。
+* カバレッジとアナライザー／リンターの問題数は任意です。カバレッジが低いほどリスクが高くなるよう、カバレッジのリスクは反転します。
+
+Activity は変更 45%、変更量 35%、著者 10%、新しさ 10% です。Risk は複雑度 25%、再作業 25%、カバレッジ不足 20%、変更結合 20%、問題数 10% です。利用できないメトリクスは除外し、残りの重みを再正規化します。レベルは Critical（80 以上）、High（60 以上）、Medium（40 以上）、Low（40 未満）です。ホットスポットの順位はリスクだけでなく優先度を使用します。ベースラインは Critical／hotspot の状態、リスク、優先度の変化を示します。
+
+## 設定と出力
+
+まず [`examples/quality.json`](examples/quality.json) を使用してください。機械可読な契約は [`schema/`](schema/) にあります。JSON の `schemaVersion` は 1 です。Markdown 出力は `$GITHUB_STEP_SUMMARY` に対応しています。終了コードは、成功が 0、解析エラーが 1、引数エラーが 2 です（3 は将来の quality gate 用に予約されています）。
+
+## ユニットテストとカバレッジ
 
 ```bash
 dotnet test csharp/QualityReporter.CSharp.slnx --collect:"XPlat Code Coverage"
 cd typescript && npm run coverage
 ```
 
-The .NET command writes Cobertura under `TestResults`; the TypeScript command prints a c8 summary and writes `typescript/coverage/coverage-summary.json`. Coverage focuses on independently testable analyzers, parsers, risk/baseline logic, and reporters. Process-launching CLI wiring remains covered by end-to-end smoke checks.
+.NET のコマンドは `TestResults` 以下に Cobertura を出力します。TypeScript のコマンドは c8 の概要を表示し、`typescript/coverage/coverage-summary.json` を出力します。カバレッジは解析器、パーサー、リスク／ベースライン処理、レポーターなど、独立してテスト可能な部分を対象にします。プロセスを起動する CLI の配線はエンドツーエンドのスモークチェックで確認します。
 
-## v1.2 symbol analysis
+## v1.2 のシンボル解析
 
-The `symbols` array is additive to the v1 file model and currently describes methods, constructors, operators, configured accessors/local functions, TypeScript functions and methods, variable-assigned functions, React components, and custom hooks at HEAD. Configure extraction and complexity thresholds with `methodAnalysis`. Existing `functions` output remains available for compatibility. Symbol history, coverage/issue assignment, coupling, scoring, recommendations, and baseline trends are represented in the contract but remain unavailable until history mapping is implemented; missing values must not be interpreted as quality verdicts. Method renames can split identity because rename tracking is disabled by default.
+`symbols` 配列は v1 のファイルモデルに追加されたもので、現在の HEAD にあるメソッド、コンストラクター、演算子、設定されたアクセサー／ローカル関数、TypeScript の関数とメソッド、変数に代入された関数、React コンポーネント、カスタムフックを記述します。抽出と複雑度のしきい値は `methodAnalysis` で設定します。既存の `functions` 出力は互換性のため引き続き利用できます。シンボル履歴、カバレッジ／問題の割り当て、coupling、スコア、推奨事項、ベースラインの傾向は契約に含まれていますが、履歴マッピングが実装されるまで利用できません。欠損値を品質の判定として解釈しないでください。デフォルトでは rename tracking が無効なため、メソッド名の変更で ID が分割されることがあります。
 
-## Limits
+## 制限事項
 
-v1 does not infer bug-fix intent, call GitHub APIs, store history, track method history/renames, detect clones, or provide an architecture score/UI. Rename parsing follows Git numstat output; binary numstat entries do not contribute churn. Complexity is control-flow syntax based and is a prioritization signal, not a semantic quality verdict.
+v1 はバグ修正の意図を推測せず、GitHub API を呼び出さず、履歴を保存せず、メソッドの履歴／rename を追跡せず、クローンを検出せず、アーキテクチャスコアや UI を提供しません。rename の解析は Git の numstat 出力に従い、バイナリの numstat エントリは churn に加算しません。複雑度は制御フロー構文に基づく優先順位付けのシグナルであり、意味論的な品質判定ではありません。
 
-## v1.1 evaluation model
+## v1.1 の評価モデル
 
-QualityReporter separates **development activity** from **quality risk**. Activity (change frequency, churn, authors, and recency) never by itself declares a problem. Quality risk uses complexity, rework, coverage deficiency, coupling, and analyzer/lint issues, re-normalizing weights when optional metrics are unavailable. Hotspot priority combines risk with maturity-adjusted activity (`risk × (0.60 + 0.40 × effectiveActivity/100)`).
+QualityReporter は**開発活動**と**品質リスク**を分離します。Activity（変更頻度、churn、著者、新しさ）だけで問題を判定することはありません。Quality risk は複雑度、rework、カバレッジ不足、coupling、アナライザー／リンターの問題を使い、任意メトリクスがない場合は重みを再正規化します。Hotspot priority はリスクと成熟度調整済み Activity（`risk × (0.60 + 0.40 × effectiveActivity/100)`）を組み合わせます。
 
-Files can be classified as `ACTIVE`, `NEW_ACTIVE`, `COMPLEX`, `REWORK`, `UNTESTED`, `COUPLED`, and `CRITICAL`. Recommendations are deterministic, include metric evidence, and identify review, testing, refactoring, or design-review candidates rather than definitive quality verdicts. JSON keeps `schemaVersion: 1` for backward compatibility while adding `activity`, `hotspot`, and `recommendations` objects.
+ファイルは `ACTIVE`、`NEW_ACTIVE`、`COMPLEX`、`REWORK`、`UNTESTED`、`COUPLED`、`CRITICAL` に分類できます。推奨事項は決定的で、メトリクスの根拠を含み、確定的な品質判定ではなく、レビュー、テスト、リファクタリング、設計レビューの候補を示します。JSON は後方互換性のため `schemaVersion: 1` を維持し、`activity`、`hotspot`、`recommendations` オブジェクトを追加しています。
