@@ -13,7 +13,7 @@ try
         if (!options.TryGetValue("--reports", out var reports) || !options.TryGetValue("--output", out var output) || !options.TryGetValue("--source-commit", out var commit)) return Usage();
         var snapshot = SnapshotBuilder.Build(reports.Split(',', StringSplitOptions.RemoveEmptyEntries), commit,
             options.TryGetValue("--generated-at", out var at) ? DateTimeOffset.Parse(at) : DateTimeOffset.UtcNow,
-            options.GetValueOrDefault("--version", "1.5.0"), options.GetValueOrDefault("--score-model-version", "2"), options.GetValueOrDefault("--config"));
+            options.GetValueOrDefault("--version", "1.5.0"), options.GetValueOrDefault("--score-model-version", SnapshotBuilder.CurrentScoreModelVersion), options.GetValueOrDefault("--config"));
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!); File.WriteAllText(output, JsonSerializer.Serialize(snapshot, json)); return 0;
     }
     if (args[0] == "analyze")
