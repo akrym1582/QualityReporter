@@ -1,1 +1,0 @@
-namespace QualityReporter.CSharp.Analysis.Axes; public sealed class KnowledgeRiskCalculator(KnowledgeAxisConfig c):QualityAxisCalculator(new Dictionary<string,double>{{"ownershipConcentration",c.Weights.OwnershipConcentration},{"authorDiversity",c.Weights.AuthorDiversity}},c.Enabled);

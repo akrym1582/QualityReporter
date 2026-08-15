@@ -150,4 +150,4 @@ Maintainability Risk は Complexity 25%、Rework 25%、Duplication 20%、Couplin
 
 ## v1.4: 説明可能な品質軸
 
-v1.4 では Activity（変更活動）を品質リスクから明確に分離し、`scores` に Maintainability、Testability、Architecture、Knowledge、Overall Quality、Hotspot Priority を保存します。各軸は利用可能な component だけで重みを再正規化し、計算不能な軸は `score: null` / `level: unknown` になります。Knowledge は組織上の注意シグナルであり、既定では Overall Quality や Quality Gate に含まれません。Hotspot Priority は Overall Quality と Activity を組み合わせた「現在の開発で改善効果が高い順」であり、Activity が高いだけの健全なコードを問題とは判定しません。
+v1.4 では Activity（変更活動）を品質リスクから明確に分離し、`scores` に Maintainability、Testability、Architecture、Overall Quality、Hotspot Priority を保存します。各軸は利用可能な component だけで重みを再正規化し、計算不能な軸は `score: null` / `level: unknown` になります。Knowledge は現在は算出・出力しません。既存の v1.4 設定に含まれる `qualityAxes.knowledge` は後方互換性のため受理しますが無視します。Hotspot Priority は Overall Quality と Activity を組み合わせた「現在の開発で改善効果が高い順」であり、Activity が高いだけの健全なコードを問題とは判定しません。
