@@ -1,0 +1,2 @@
+export type CoverageMode='line'|'branch'|'combined';
+export function calculateUntestedComplexity(complexity:number,lineCoverage?:number,branchCoverage?:number,mode:CoverageMode='line'):number|undefined{const coverage=mode==='branch'?branchCoverage:mode==='combined'?(lineCoverage===undefined||branchCoverage===undefined?undefined:lineCoverage*.6+branchCoverage*.4):lineCoverage;return coverage===undefined?undefined:Math.round(complexity*(1-Math.min(100,Math.max(0,coverage))/100)*100)/100;}

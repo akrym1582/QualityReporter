@@ -30,9 +30,11 @@
   "riskWeights": {
     "complexity": 25,
     "rework": 25,
-    "coverage": 20,
-    "coupling": 20,
-    "issues": 10
+    "duplication": 20,
+    "coupling": 15,
+    "issues": 15,
+    "coverageRisk": 40,
+    "untestedComplexity": 60
   },
   "classification": {
     "highActivity": 70,
@@ -70,5 +72,21 @@
       "enabled": false,
       "similarityThreshold": 0.8
     }
+  },
+  "untestedComplexity": {
+    "enabled": true,
+    "coverageMode": "line",
+    "complexityWarning": 15,
+    "complexityCritical": 25,
+    "lowCoverage": 0.6,
+    "criticalCoverage": 0.5
+  },
+  "duplication": {
+    "enabled": true,
+    "reportPath": "reports/jscpd.json",
+    "warningPercentage": 0.2,
+    "strongPercentage": 0.4,
+    "minimumLines": 5,
+    "minimumTokens": 50
   }
 }
