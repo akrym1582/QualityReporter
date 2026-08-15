@@ -1,0 +1,1 @@
+import type {Config,FileResult} from '../model.js';export function calculatePriority(files:FileResult[],m:Config['fileMaturity']){for(const f of files){if(+f.risk.score!>=m.criticalRiskBypass)f.activity.effectiveScore=f.activity.score;f.hotspot.priorityScore=Math.round(+f.risk.score!*(.6+.4*+f.activity.effectiveScore!/100)*10)/10;}}

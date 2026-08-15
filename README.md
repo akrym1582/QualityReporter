@@ -28,7 +28,7 @@ C# coverage accepts Cobertura. Analyzer diagnostics can be captured from `dotnet
 * Current-source **LOC and cyclomatic complexity** are collected per file and function/method. TS/TSX uses the TypeScript Compiler API; TSX is treated as TypeScript. C# uses Roslyn syntax trees.
 * Coverage and analyzer/lint issue counts are optional. Coverage risk reverses line coverage so low coverage is risky.
 
-Risk uses repository percentiles: change 25%, churn 15%, rework 20%, complexity 20%, coverage deficiency 15%, issues 5%. Missing metrics are omitted and remaining weights are re-normalized. Levels are Critical ≥80, High ≥60, Medium ≥40, and Low <40; files scoring ≥60 are hotspots. Baselines identify new/resolved hotspots and increased/decreased file risk.
+Activity uses change 45%, churn 35%, authors 10%, and recency 10%. Risk separately uses complexity 25%, rework 25%, coverage deficiency 20%, coupling 20%, and issues 10%. Missing metrics are omitted and remaining weights are re-normalized. Levels are Critical ≥80, High ≥60, Medium ≥40, and Low <40; hotspot ranking uses priority rather than risk alone. Baselines identify changes to critical and hotspot status, risk, and priority.
 
 ## Configuration and outputs
 
@@ -46,3 +46,9 @@ The .NET command writes Cobertura under `TestResults`; the TypeScript command pr
 ## Limits
 
 v1 does not infer bug-fix intent, call GitHub APIs, store history, track method history/renames, detect clones, or provide an architecture score/UI. Rename parsing follows Git numstat output; binary numstat entries do not contribute churn. Complexity is control-flow syntax based and is a prioritization signal, not a semantic quality verdict.
+
+## v1.1 evaluation model
+
+QualityReporter separates **development activity** from **quality risk**. Activity (change frequency, churn, authors, and recency) never by itself declares a problem. Quality risk uses complexity, rework, coverage deficiency, coupling, and analyzer/lint issues, re-normalizing weights when optional metrics are unavailable. Hotspot priority combines risk with maturity-adjusted activity (`risk × (0.60 + 0.40 × effectiveActivity/100)`).
+
+Files can be classified as `ACTIVE`, `NEW_ACTIVE`, `COMPLEX`, `REWORK`, `UNTESTED`, `COUPLED`, and `CRITICAL`. Recommendations are deterministic, include metric evidence, and identify review, testing, refactoring, or design-review candidates rather than definitive quality verdicts. JSON keeps `schemaVersion: 1` for backward compatibility while adding `activity`, `hotspot`, and `recommendations` objects.
