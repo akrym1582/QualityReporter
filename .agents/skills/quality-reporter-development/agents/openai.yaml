@@ -1,0 +1,4 @@
+interface:
+  display_name: "QualityReporter Development"
+  short_description: "Develop and validate the QualityReporter C# and TypeScript CLIs"
+  default_prompt: "Implement or review a QualityReporter change, preserve the shared contracts, and run the relevant tests and coverage checks."
