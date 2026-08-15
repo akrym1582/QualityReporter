@@ -1,0 +1,1 @@
+namespace QualityReporter.CSharp.Analysis.Axes; public sealed class MaintainabilityRiskCalculator(MaintainabilityAxisConfig c):QualityAxisCalculator(new Dictionary<string,double>{{"complexity",c.Weights.Complexity},{"rework",c.Weights.Rework},{"duplication",c.Weights.Duplication},{"issues",c.Weights.Issues},{"methodSize",c.Weights.MethodSize}},c.Enabled);

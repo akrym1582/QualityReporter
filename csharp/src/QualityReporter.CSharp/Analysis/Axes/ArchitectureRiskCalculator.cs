@@ -1,0 +1,1 @@
+namespace QualityReporter.CSharp.Analysis.Axes; public sealed class ArchitectureRiskCalculator(ArchitectureAxisConfig c):QualityAxisCalculator(new Dictionary<string,double>{{"changeCoupling",c.Weights.ChangeCoupling},{"issues",c.Weights.Issues}},c.Enabled);

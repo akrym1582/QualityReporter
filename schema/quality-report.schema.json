@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qualityreporter.dev/schemas/quality-report.schema.json",
-  "title": "QualityReporter v1.3 report",
+  "title": "QualityReporter v1.4 report",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -123,6 +123,9 @@
             "object",
             "null"
           ]
+        },
+        "scores": {
+          "$ref": "#/$defs/scores"
         }
       }
     },
@@ -197,6 +200,9 @@
         },
         "recommendations": {
           "type": "array"
+        },
+        "scores": {
+          "$ref": "#/$defs/scores"
         }
       }
     },
@@ -243,6 +249,79 @@
               }
             }
           }
+        }
+      }
+    },
+    "axisScore": {
+      "type": "object",
+      "required": [
+        "score",
+        "level",
+        "components",
+        "availableWeight"
+      ],
+      "properties": {
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "level": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical",
+            "unknown"
+          ]
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "availableWeight": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "required": [
+        "activity",
+        "maintainability",
+        "testability",
+        "architecture",
+        "knowledge",
+        "overallQuality",
+        "hotspotPriority"
+      ],
+      "properties": {
+        "activity": {
+          "$ref": "#/$defs/axisScore"
+        },
+        "maintainability": {
+          "$ref": "#/$defs/axisScore"
+        },
+        "testability": {
+          "$ref": "#/$defs/axisScore"
+        },
+        "architecture": {
+          "$ref": "#/$defs/axisScore"
+        },
+        "knowledge": {
+          "$ref": "#/$defs/axisScore"
+        },
+        "overallQuality": {
+          "$ref": "#/$defs/axisScore"
+        },
+        "hotspotPriority": {
+          "$ref": "#/$defs/axisScore"
         }
       }
     }
