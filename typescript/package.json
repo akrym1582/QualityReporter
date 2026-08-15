@@ -1,0 +1,21 @@
+{
+  "name": "quality-ts",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "quality-ts": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && node --test dist-tests/tests/*.test.js",
+    "coverage": "tsc -p tsconfig.test.json && c8 --reporter=text --reporter=json-summary --reports-dir=coverage node --test dist-tests/tests/*.test.js"
+  },
+  "dependencies": {
+    "minimatch": "^10.0.1",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "c8": "^10.1.3"
+  }
+}
