@@ -15,3 +15,8 @@ public class QualityAxesV14Tests {
  [Fact] public void Unavailable_analyzer_issues_are_omitted_from_quality_axes(){var files=new List<FileResult>{File(1),File(9)};RiskCalculator.Calculate(files,new(),false);QualityScoresCalculator.Calculate(files,new());foreach(var f in files){Assert.Null(f.Risk.IssuePercentile);Assert.DoesNotContain("issues",f.Scores.Maintainability.Components.Keys);Assert.DoesNotContain("issues",f.Scores.Architecture.Components.Keys);}}
  static FileResult File(int complexity=1)=>new(){Path="a.cs",Metrics=new(){Loc=10,Complexity=complexity},History=new(){CommitCount=1,Churn=1,AuthorCount=1},Activity=new(){Score=50,EffectiveScore=50}};
 }
+
+public class LatestConfigTests
+{
+ [Fact] public void Compatibility_configuration_properties_are_loaded(){var path=Path.GetTempFileName();try{File.WriteAllText(path,"""{"qualityAxes":{"maintainability":{"includeInOverallRisk":false},"testability":{"includeInOverallRisk":false},"architecture":{"includeInOverallRisk":false},"knowledge":{"enabled":true,"includeInOverallRisk":false,"weights":{"ownershipConcentration":60,"authorDiversity":40}}},"riskWeights":{"coverageRisk":41,"coverage":37}}""");var config=ConfigLoader.Read(path);Assert.False(config.QualityAxes.Maintainability.IncludeInOverallRisk);Assert.False(config.QualityAxes.Testability.IncludeInOverallRisk);Assert.False(config.QualityAxes.Architecture.IncludeInOverallRisk);Assert.NotNull(config.QualityAxes.Knowledge);Assert.Equal(41,config.RiskWeights.CoverageRisk);}finally{File.Delete(path);}}
+}
