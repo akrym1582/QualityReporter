@@ -118,3 +118,13 @@ public sealed class ParserAndMetricsTests
         public void Dispose() => File.Delete(Path);
     }
 }
+
+public class V13MetricTests
+{
+ [Theory][InlineData(34,42,19.72)][InlineData(34,100,0)][InlineData(3,0,3)] public void Untested_complexity_uses_uncovered_fraction(int complexity,double coverage,double expected)=>Assert.Equal(expected,QualityReporter.CSharp.Analysis.UntestedComplexityCalculator.Calculate(complexity,coverage));
+ [Fact] public void Untested_complexity_is_missing_without_coverage()=>Assert.Null(QualityReporter.CSharp.Analysis.UntestedComplexityCalculator.Calculate(34,null));
+ [Fact] public void Combined_coverage_is_supported()=>Assert.Equal(4.4,QualityReporter.CSharp.Analysis.UntestedComplexityCalculator.Calculate(10,40,80,"combined"));
+ [Fact] public void Duplication_risk_prioritizes_activity()=>Assert.True(QualityReporter.CSharp.Analysis.DuplicationRiskCalculator.Calculate(.4,90)>QualityReporter.CSharp.Analysis.DuplicationRiskCalculator.Calculate(.4,10));
+ [Fact] public void Jscpd_parser_and_symbol_mapper_support_partial_overlap(){var groups=new QualityReporter.CSharp.Duplication.JscpdReportParser().Parse("""{"duplicates":[{"lines":6,"tokens":60,"firstFile":{"name":"src/A.cs","start":5,"end":10},"secondFile":{"name":"src/B.cs","start":1,"end":6}}]}""");var file=new FileResult{Path="src/A.cs",Metrics=new(){Loc=20},Symbols=[new SymbolResult{SymbolId=new string('a',64),SymbolKey="A.M",Name="M",Kind="method",Location=new(8,15),Metrics=new(){Loc=8}}]};QualityReporter.CSharp.Duplication.DuplicateSymbolMapper.Map(groups,[file]);Assert.Equal(6,file.Metrics.Duplication!.DuplicatedLines);Assert.Equal(3,file.Symbols[0].Metrics.Duplication!.DuplicatedLines);}
+ [Fact] public void Invalid_jscpd_report_is_rejected()=>Assert.Throws<FormatException>(()=>new QualityReporter.CSharp.Duplication.JscpdReportParser().Parse("{"));
+}

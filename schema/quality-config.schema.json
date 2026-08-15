@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qualityreporter.dev/schemas/quality-config.schema.json",
-  "title": "QualityReporter v1.2 configuration",
+  "title": "QualityReporter v1.3 configuration",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -73,6 +73,70 @@
         },
         "renameTracking": {
           "type": "object"
+        }
+      }
+    },
+    "untestedComplexity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "coverageMode": {
+          "enum": [
+            "line",
+            "branch",
+            "combined"
+          ]
+        },
+        "complexityWarning": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "complexityCritical": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lowCoverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "criticalCoverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "duplication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "reportPath": {
+          "type": "string"
+        },
+        "warningPercentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "strongPercentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "minimumLines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minimumTokens": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     }

@@ -134,3 +134,16 @@ v1 はバグ修正の意図を推測せず、GitHub API を呼び出さず、履
 QualityReporter は**開発活動**と**品質リスク**を分離します。Activity（変更頻度、churn、著者、新しさ）だけで問題を判定することはありません。Quality risk は複雑度、rework、カバレッジ不足、coupling、アナライザー／リンターの問題を使い、任意メトリクスがない場合は重みを再正規化します。Hotspot priority はリスクと成熟度調整済み Activity（`risk × (0.60 + 0.40 × effectiveActivity/100)`）を組み合わせます。
 
 ファイルは `ACTIVE`、`NEW_ACTIVE`、`COMPLEX`、`REWORK`、`UNTESTED`、`COUPLED`、`CRITICAL` に分類できます。推奨事項は決定的で、メトリクスの根拠を含み、確定的な品質判定ではなく、レビュー、テスト、リファクタリング、設計レビューの候補を示します。JSON は後方互換性のため `schemaVersion: 1` を維持し、`activity`、`hotspot`、`recommendations` オブジェクトを追加しています。
+
+## v1.3: Untested Complexity と重複コード
+
+v1.3 は複雑度と未テスト割合を組み合わせた `untestedComplexity` を追加します。カバレッジがない場合は `null`／`Not Available` とし、0% とみなしません。`coverageMode` は `line`（既定）、`branch`、`combined`（line 60% + branch 40%）から選択できます。複雑度自体も独立したレビューシグナルとして維持されます。
+
+重複検出アルゴリズムは QualityReporter に実装しません。CI で jscpd を実行し、その JSON を `--duplication reports/jscpd.json` で渡します。QualityReporter は C#、TypeScript、TSX の fragment をファイルと symbol の行範囲へ割り当て、重複率と Activity を組み合わせてレビュー優先度を付けます。重複は共通化の確定判断ではなく、業務上同じ責務かを確認する候補です。
+
+```yaml
+- run: npx jscpd src --reporters json --output reports
+- run: quality-ts analyze --root . --coverage coverage/coverage-final.json --duplication reports/jscpd-report.json --output reports/quality.json --markdown "$GITHUB_STEP_SUMMARY"
+```
+
+Maintainability Risk は Complexity 25%、Rework 25%、Duplication 20%、Coupling 15%、Analyzer Issues 15% です。Test Risk は Coverage Risk 40%、Untested Complexity 60% で、利用不能な項目を除いて再正規化します。Overall Risk は Maintainability 50%、Test 30%、Architecture 20% を基本とし、Hotspot Priority は従来どおり Activity factor を適用します。

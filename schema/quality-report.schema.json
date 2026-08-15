@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qualityreporter.dev/schemas/quality-report.schema.json",
-  "title": "QualityReporter v1.2 report",
+  "title": "QualityReporter v1.3 report",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -48,6 +48,12 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/file"
+      }
+    },
+    "duplicates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/duplicateGroup"
       }
     }
   },
@@ -191,6 +197,52 @@
         },
         "recommendations": {
           "type": "array"
+        }
+      }
+    },
+    "duplicateGroup": {
+      "type": "object",
+      "required": [
+        "id",
+        "lines",
+        "tokens",
+        "fragments"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fragments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "startLine",
+              "endLine"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "startLine": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "endLine": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
         }
       }
     }
