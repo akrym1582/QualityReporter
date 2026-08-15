@@ -1,0 +1,19 @@
+name: Load Quality History
+description: Reads lightweight snapshots from the quality-history branch commit history.
+inputs:
+  history-directory: { default: .quality-history }
+  window-runs: { default: "8" }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env: { HISTORY_DIR: "${{ inputs.history-directory }}", WINDOW_RUNS: "${{ inputs.window-runs }}" }
+      run: |
+        set -euo pipefail
+        rm -rf "$HISTORY_DIR" && mkdir -p "$HISTORY_DIR"
+        git fetch origin quality-history:refs/remotes/origin/quality-history 2>/dev/null || exit 0
+        i=0
+        while read -r commit; do
+          git show "$commit:snapshot.json" > "$HISTORY_DIR/$(printf '%03d' "$i").json" || true
+          i=$((i+1))
+        done < <(git log --format=%H --reverse -n "$WINDOW_RUNS" refs/remotes/origin/quality-history -- snapshot.json)

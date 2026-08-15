@@ -1,0 +1,18 @@
+name: Publish Quality Report
+description: Publishes detailed diagnostics as an artifact and Markdown in the job summary.
+inputs:
+  directory: { default: quality-report }
+  markdown: { default: quality-report/quality-report.md }
+  config-path: { required: true }
+  history-directory: { default: .quality-history }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        reports=$(find "${{ inputs.directory }}" -maxdepth 1 \( -name csharp.json -o -name typescript.json \) -printf '%p,' | sed 's/,$//')
+        dotnet run --project "${{ github.action_path }}/../../csharp/src/QualityReporter.Trend" -- snapshot --reports "$reports" --source-commit "$GITHUB_SHA" --config "${{ inputs.config-path }}" --output "${{ inputs.directory }}/snapshot.json"
+        dotnet run --project "${{ github.action_path }}/../../csharp/src/QualityReporter.Trend" -- analyze --current "${{ inputs.directory }}/snapshot.json" --history "${{ inputs.history-directory }}" --output "${{ inputs.directory }}/trend.json" --markdown "${{ inputs.markdown }}"
+        cat "${{ inputs.markdown }}" >> "$GITHUB_STEP_SUMMARY"
+    - uses: actions/upload-artifact@v4
+      with: { name: quality-report, path: "${{ inputs.directory }}", if-no-files-found: error }

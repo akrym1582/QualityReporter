@@ -1,0 +1,14 @@
+name: Analyze TypeScript
+description: Wraps the QualityReporter TypeScript CLI without implementing scoring logic.
+inputs:
+  root: { required: true }
+  config-path: { required: true }
+  output: { default: quality-report/typescript.json }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        cd "${{ github.action_path }}/../../typescript"
+        npm ci && npm run build
+        node dist/cli.js analyze --root "${{ github.workspace }}/${{ inputs.root }}" --config "${{ github.workspace }}/${{ inputs.config-path }}" --output "${{ github.workspace }}/${{ inputs.output }}"

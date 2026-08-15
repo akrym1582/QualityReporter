@@ -1,0 +1,11 @@
+name: Analyze CSharp
+description: Wraps the QualityReporter CSharp CLI without implementing scoring logic.
+inputs:
+  project: { required: true }
+  config-path: { required: true }
+  output: { default: quality-report/csharp.json }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: dotnet run --project "${{ github.action_path }}/../../csharp/src/QualityReporter.CSharp" -- analyze --project "${{ inputs.project }}" --config "${{ inputs.config-path }}" --output "${{ inputs.output }}"
