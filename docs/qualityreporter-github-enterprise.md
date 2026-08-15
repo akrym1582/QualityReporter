@@ -352,7 +352,7 @@ Markdown は GitHub Actions Job Summary に追加します。
 
 ```bash
 cat reports/csharp.md > "$GITHUB_STEP_SUMMARY"
-cat reports/typescript.md > "$GITHUB_STEP_SUMMARY"
+cat reports/typescript.md >> "$GITHUB_STEP_SUMMARY"
 ```
 
 詳細な JSON は Artifact として保存します。
