@@ -1,6 +1,7 @@
 using QualityReporter.CSharp;
 using QualityReporter.CSharp.Coverage;
 using QualityReporter.CSharp.Metrics;
+using QualityReporter.CSharp.SymbolExtraction;
 using Xunit;
 
 public sealed class ParserAndMetricsTests
@@ -61,6 +62,29 @@ public sealed class ParserAndMetricsTests
         Assert.True(metric.Complexity >= 5);
         Assert.Contains(functions, x => x.Name == "Run" && x.Kind == "method" && x.Complexity >= 4);
         Assert.Contains(functions, x => x.Name == "Local" && x.Kind == "local-function" && x.Complexity == 2);
+    }
+
+    [Fact]
+    public void SymbolExtractor_builds_stable_semantic_identities_and_excludes_nested_complexity()
+    {
+        const string source = """
+            namespace Billing;
+            class Service {
+              Service() { }
+              int Run<T>(int value) { int Local() => value > 0 ? 1 : 0; if (value > 1) return Local(); return 0; }
+              int Run(string value) => value.Length;
+              int Value { get { return 1; } set { } }
+            }
+            """;
+        var symbols = new CSharpSymbolExtractor(new() { IncludeAccessors = true }).Extract("Service.cs", source);
+
+        Assert.Equal(6, symbols.Count);
+        Assert.Equal(2, symbols.Single(x => x.Name == "Run" && x.SymbolKey.Contains("int")).Metrics.Complexity);
+        Assert.Equal(2, symbols.Single(x => x.Name == "Local").Metrics.Complexity);
+        Assert.All(symbols, x => Assert.Matches("^[0-9a-f]{64}$", x.SymbolId));
+        Assert.Equal(symbols.Count, symbols.Select(x => x.SymbolId).Distinct().Count());
+        Assert.Contains(symbols, x => x.Kind == "constructor");
+        Assert.Contains(symbols, x => x.Kind == "getter");
     }
 
     private sealed class TempFile : IDisposable

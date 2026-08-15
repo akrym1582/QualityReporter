@@ -1,1 +1,198 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://qualityreporter.dev/schemas/quality-report.schema.json","title":"QualityReporter v1.1 report","type":"object","required":["schemaVersion","language","generatedAt","repository","summary","files","warnings"],"properties":{"schemaVersion":{"const":1},"language":{"enum":["csharp","typescript"]},"generatedAt":{"type":"string","format":"date-time"},"repository":{"type":"object"},"summary":{"type":"object"},"warnings":{"type":"array","items":{"type":"string"}},"trend":{"type":["object","null"]},"files":{"type":"array","items":{"$ref":"#/$defs/file"}}},"$defs":{"file":{"type":"object","required":["path","metrics","history","activity","risk","hotspot","recommendations","couplings","functions"],"properties":{"path":{"type":"string"},"metrics":{"type":"object"},"history":{"type":"object"},"activity":{"type":"object","required":["score","maturityFactor","effectiveScore"]},"risk":{"type":"object","required":["score","level"]},"hotspot":{"type":"object","required":["priorityScore","classifications"]},"recommendations":{"type":"array"},"couplings":{"type":"array"},"functions":{"type":"array"}}}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qualityreporter.dev/schemas/quality-report.schema.json",
+  "title": "QualityReporter v1.2 report",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "language",
+    "generatedAt",
+    "repository",
+    "summary",
+    "files",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "language": {
+      "enum": [
+        "csharp",
+        "typescript"
+      ]
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository": {
+      "type": "object"
+    },
+    "summary": {
+      "type": "object"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "trend": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "required": [
+        "path",
+        "metrics",
+        "history",
+        "activity",
+        "risk",
+        "hotspot",
+        "recommendations",
+        "couplings",
+        "functions"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "metrics": {
+          "type": "object"
+        },
+        "history": {
+          "type": "object"
+        },
+        "activity": {
+          "type": "object",
+          "required": [
+            "score",
+            "maturityFactor",
+            "effectiveScore"
+          ]
+        },
+        "risk": {
+          "type": "object",
+          "required": [
+            "score",
+            "level"
+          ]
+        },
+        "hotspot": {
+          "type": "object",
+          "required": [
+            "priorityScore",
+            "classifications"
+          ]
+        },
+        "recommendations": {
+          "type": "array"
+        },
+        "couplings": {
+          "type": "array"
+        },
+        "functions": {
+          "type": "array"
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/symbol"
+          }
+        },
+        "methodSummary": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "symbol": {
+      "type": "object",
+      "required": [
+        "symbolId",
+        "symbolKey",
+        "name",
+        "kind",
+        "location",
+        "metrics",
+        "history",
+        "activity",
+        "risk",
+        "hotspot",
+        "couplings",
+        "recommendations"
+      ],
+      "properties": {
+        "symbolId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "symbolKey": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "location": {
+          "type": "object",
+          "required": [
+            "startLine",
+            "endLine"
+          ],
+          "properties": {
+            "startLine": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "endLine": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "required": [
+            "loc",
+            "complexity"
+          ]
+        },
+        "history": {
+          "type": "object"
+        },
+        "activity": {
+          "type": "object"
+        },
+        "risk": {
+          "type": "object"
+        },
+        "hotspot": {
+          "type": "object"
+        },
+        "couplings": {
+          "type": "array"
+        },
+        "recommendations": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}
