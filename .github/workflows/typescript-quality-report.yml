@@ -24,6 +24,7 @@ jobs:
       - name: Generate TypeScript quality report
         working-directory: typescript
         run: |
+          npm run coverage
           npm run build
           mkdir -p ../reports
           node dist/cli.js analyze \

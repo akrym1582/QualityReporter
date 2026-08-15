@@ -14,4 +14,4 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: "10.x" }
       - name: Run C# unit tests
-        run: dotnet test csharp/QualityReporter.CSharp.slnx
+        run: dotnet test csharp/QualityReporter.CSharp.slnx --collect:"XPlat Code Coverage"

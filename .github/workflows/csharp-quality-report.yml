@@ -18,13 +18,19 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: "10.x" }
+      - name: Collect C# coverage
+        run: dotnet test csharp/QualityReporter.CSharp.slnx --collect:"XPlat Code Coverage"
       - name: Generate C# quality report
         run: |
           mkdir -p reports
-          dotnet run --project csharp/src/QualityReporter.CSharp -- analyze \
-            --solution csharp/QualityReporter.CSharp.slnx \
-            --output reports/csharp.json \
-            --markdown reports/csharp.md
+          coverage="$(find . -path '*/TestResults/*' -name coverage.cobertura.xml -print -quit)"
+          args=(--solution csharp/QualityReporter.CSharp.slnx
+            --output reports/csharp.json
+            --markdown reports/csharp.md)
+          if [[ -n "$coverage" ]]; then
+            args+=(--coverage "$coverage")
+          fi
+          dotnet run --project csharp/src/QualityReporter.CSharp -- analyze "${args[@]}"
       - name: Add report to job summary
         run: cat reports/csharp.md >> "$GITHUB_STEP_SUMMARY"
       - name: Upload C# quality report
