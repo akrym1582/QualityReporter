@@ -18,5 +18,5 @@ public class QualityAxesV14Tests {
 
 public class LatestConfigTests
 {
- [Fact] public void Obsolete_configuration_properties_are_rejected(){var path=Path.GetTempFileName();try{File.WriteAllText(path,"""{"qualityAxes":{"knowledge":{"enabled":true}}}""");Assert.Throws<System.Text.Json.JsonException>(()=>ConfigLoader.Read(path));}finally{File.Delete(path);}}
+ [Fact] public void Compatibility_configuration_properties_are_loaded(){var path=Path.GetTempFileName();try{File.WriteAllText(path,"""{"qualityAxes":{"maintainability":{"includeInOverallRisk":false},"testability":{"includeInOverallRisk":false},"architecture":{"includeInOverallRisk":false},"knowledge":{"enabled":true,"includeInOverallRisk":false,"weights":{"ownershipConcentration":60,"authorDiversity":40}}},"riskWeights":{"coverageRisk":41,"coverage":37}}""");var config=ConfigLoader.Read(path);Assert.False(config.QualityAxes.Maintainability.IncludeInOverallRisk);Assert.False(config.QualityAxes.Testability.IncludeInOverallRisk);Assert.False(config.QualityAxes.Architecture.IncludeInOverallRisk);Assert.NotNull(config.QualityAxes.Knowledge);Assert.Equal(41,config.RiskWeights.CoverageRisk);}finally{File.Delete(path);}}
 }

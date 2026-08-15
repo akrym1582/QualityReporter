@@ -234,6 +234,33 @@
               }
             }
           }
+        },
+        "knowledge": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "includeInOverallRisk": {
+              "type": "boolean"
+            },
+            "weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ownershipConcentration": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "authorDiversity": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "deprecated": true,
+          "description": "Legacy v1.4 setting accepted for backwards compatibility; Knowledge risk is no longer calculated."
         }
       }
     },
