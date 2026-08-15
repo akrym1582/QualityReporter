@@ -1,4 +1,8 @@
 {
+  "trend": {
+    "windowRuns": 8,
+    "minimumSamples": 4
+  },
   "historyDays": 180,
   "reworkWindowDays": 30,
   "exclude": [

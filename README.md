@@ -129,6 +129,25 @@ cd typescript && npm run coverage
 
 v1 はバグ修正の意図を推測せず、GitHub API を呼び出さず、履歴を保存せず、メソッドの履歴／rename を追跡せず、クローンを検出せず、アーキテクチャスコアや UI を提供しません。rename の解析は Git の numstat 出力に従い、バイナリの numstat エントリは churn に加算しません。複雑度は制御フロー構文に基づく優先順位付けのシグナルであり、意味論的な品質判定ではありません。
 
+## v1.5: Quality Trend と GitHub Actions 継続評価
+
+`quality-trend` は C# / TypeScript の詳細レポートから軽量な `snapshot.json` を生成し、既定で直近 8 回を実日時で線形回帰します。4 サンプル未満は `insufficient_data` とし、傾き、30 日変化、R²、連続悪化、単発 spike の寄与を組み合わせます。5 回以上かつ累積悪化 10 以上の継続的な悪化を `qualityDrift` として早期警告します。これは現在危険な `HOTSPOT` とは別の、悪化傾向を示す優先順位付けシグナルです。
+
+履歴の正本は対象リポジトリの `quality-history` branch にある `snapshot.json` の commit 履歴です。`scoreModelVersion` または設定内容から計算した `policyHash` が変わると系列を分断し、設定変更を品質変化として扱いません。詳細 JSON / Markdown は Artifact、概要は `GITHUB_STEP_SUMMARY` に出力します。Reusable Workflow は `contents: write` と同時実行制御を備え、PR では履歴を保存しません。
+
+導入側には caller workflow だけを配置します（組織名は実際の Internal Repository に置き換えてください）。
+
+```yaml
+jobs:
+  quality:
+    uses: my-org/quality-reporter-platform/.github/workflows/quality-report.yml@v1
+    with:
+      config-path: .quality/quality.json
+      csharp-project: src/App/App.csproj
+    permissions:
+      contents: write
+```
+
 ## v1.1 の評価モデル
 
 QualityReporter は**開発活動**と**品質リスク**を分離します。Activity（変更頻度、churn、著者、新しさ）だけで問題を判定することはありません。Quality risk は複雑度、rework、カバレッジ不足、coupling、アナライザー／リンターの問題を使い、任意メトリクスがない場合は重みを再正規化します。Hotspot priority はリスクと成熟度調整済み Activity（`risk × (0.60 + 0.40 × effectiveActivity/100)`）を組み合わせます。

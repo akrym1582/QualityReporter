@@ -1,0 +1,21 @@
+name: Save Quality History
+description: Commits one canonical snapshot to the caller repository quality-history branch.
+inputs:
+  snapshot: { default: quality-report/snapshot.json }
+  trend: { default: quality-report/trend.json }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env: { SNAPSHOT: "${{ inputs.snapshot }}", TREND: "${{ inputs.trend }}" }
+      run: |
+        set -euo pipefail
+        remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        tmp="$(mktemp -d)"; cp "$SNAPSHOT" "$tmp/current.json"; cp "$TREND" "$tmp/current-trend.json"
+        git clone --single-branch --branch quality-history "$remote" "$tmp/history" 2>/dev/null || { git init "$tmp/history"; git -C "$tmp/history" checkout --orphan quality-history; git -C "$tmp/history" remote add origin "$remote"; }
+        cd "$tmp/history"
+        if test -f snapshot.json && jq -e --slurpfile old snapshot.json --slurpfile new "$tmp/current.json" '($old[0].metadata | [.sourceCommit,.scoreModelVersion,.policyHash]) == ($new[0].metadata | [.sourceCommit,.scoreModelVersion,.policyHash])' >/dev/null; then exit 0; fi
+        cp "$tmp/current.json" snapshot.json; cp "$tmp/current-trend.json" trend.json
+        jq '.metadata' snapshot.json > metadata.json
+        git config user.name github-actions; git config user.email github-actions@github.com
+        git add snapshot.json trend.json metadata.json; git commit -m "quality: save ${GITHUB_SHA}"; git push origin HEAD:quality-history

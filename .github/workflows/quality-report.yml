@@ -1,0 +1,28 @@
+name: Quality Trend
+on:
+  workflow_call:
+    inputs:
+      config-path: { type: string, required: true }
+      csharp-project: { type: string, required: false, default: "" }
+      typescript-root: { type: string, required: false, default: "" }
+      save-history: { type: boolean, required: false, default: true }
+permissions: { contents: write }
+concurrency: { group: "quality-trend-${{ github.repository }}", cancel-in-progress: false }
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: my-org/quality-reporter-platform/actions/load-history@v1
+      - if: inputs.csharp-project != ''
+        uses: my-org/quality-reporter-platform/actions/analyze-csharp@v1
+        with: { project: "${{ inputs.csharp-project }}", config-path: "${{ inputs.config-path }}" }
+      - if: inputs.typescript-root != ''
+        uses: my-org/quality-reporter-platform/actions/analyze-typescript@v1
+        with: { root: "${{ inputs.typescript-root }}", config-path: "${{ inputs.config-path }}" }
+      - uses: my-org/quality-reporter-platform/actions/publish-report@v1
+        with: { config-path: "${{ inputs.config-path }}" }
+      - if: inputs.save-history && github.ref_name == github.event.repository.default_branch && github.event_name != 'pull_request'
+        uses: my-org/quality-reporter-platform/actions/save-history@v1
+        with: { snapshot: quality-report/snapshot.json }
