@@ -11,6 +11,8 @@ public sealed class TrendTests
     [Fact] public void Single_spike_is_not_drift() => Assert.False(TrendClassifier.Classify(Points(40, 42, 65, 43, 41)).QualityDrift);
     [Fact] public void Insufficient_samples_are_reported() => Assert.Equal(TrendStatus.InsufficientData, TrendClassifier.Classify(Points(10, 20, 30)).Status);
     [Fact] public void Regression_uses_irregular_elapsed_days() { var p = new[] { new TrendPoint(DateTimeOffset.Parse("2026-01-01Z"), 10), new TrendPoint(DateTimeOffset.Parse("2026-01-11Z"), 20), new TrendPoint(DateTimeOffset.Parse("2026-02-10Z"), 50), new TrendPoint(DateTimeOffset.Parse("2026-03-02Z"), 70) }; var result = TrendClassifier.Classify(p); Assert.InRange(result.SlopePer30Days, 29.9, 30.1); Assert.Equal(1, result.RSquared, 5); }
+    [Fact] public void Current_score_model_separates_renamed_snapshot_metrics() => Assert.Equal("3", SnapshotBuilder.CurrentScoreModelVersion);
+    [Fact] public void Score_model_change_breaks_series() { var report = TrendAnalyzer.Analyze(Enumerable.Range(0, 4).Select(i => Snapshot(i, "policy", "2")).Append(Snapshot(4, "policy", "3")), new()); Assert.Contains(report.Warnings, x => x.StartsWith("POLICY_CHANGED")); Assert.All(report.Trends, x => Assert.Equal(1, x.Trend.Samples)); }
     [Fact] public void Policy_change_breaks_series() { var report = TrendAnalyzer.Analyze(Enumerable.Range(0, 4).Select(i => Snapshot(i, "old")).Append(Snapshot(4, "new")), new()); Assert.Contains(report.Warnings, x => x.StartsWith("POLICY_CHANGED")); Assert.All(report.Trends, x => Assert.Equal(1, x.Trend.Samples)); }
     [Fact] public void Invalid_history_is_ignored() { var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()); Directory.CreateDirectory(dir); File.WriteAllText(Path.Combine(dir, "bad.json"), "{"); var (_, warnings) = TrendHistoryReader.Read(dir); Assert.Single(warnings); Directory.Delete(dir, true); }
     [Fact] public void Trend_status_uses_schema_casing() => Assert.Contains("\"status\":\"rapidly_deteriorating\"", JsonSerializer.Serialize(new TrendResult { Status = TrendStatus.RapidlyDeteriorating }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
@@ -44,5 +46,5 @@ public sealed class TrendTests
         }
         finally { File.Delete(path); }
     }
-    private static QualitySnapshot Snapshot(int index, string policy) => new() { Metadata = new($"c{index}", DateTimeOffset.Parse("2026-01-01Z").AddDays(index), "1.5", "2", policy), Repository = new() { Scores = new() { ["overallQuality"] = index * 5 } } };
+    private static QualitySnapshot Snapshot(int index, string policy, string model = "2") => new() { Metadata = new($"c{index}", DateTimeOffset.Parse("2026-01-01Z").AddDays(index), "1.5", model, policy), Repository = new() { Scores = new() { ["overallQuality"] = index * 5 } } };
 }

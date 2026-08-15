@@ -66,6 +66,11 @@ public sealed class GitAndReportingTests
             var text = File.ReadAllText(markdown);
 
             Assert.Equal("src/A.cs", Assert.Single(roundTrip.Files).Path);
+            using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(json));
+            var knowledge = document.RootElement.GetProperty("files")[0].GetProperty("scores").GetProperty("knowledge");
+            Assert.Equal(System.Text.Json.JsonValueKind.Null, knowledge.GetProperty("score").ValueKind);
+            Assert.Equal("unknown", knowledge.GetProperty("level").GetString());
+            Assert.Equal(0, knowledge.GetProperty("availableWeight").GetDouble());
             Assert.Contains("Coverage: Not Available", text);
             Assert.Contains("src/B.cs", text);
             Assert.Contains("Run", text);
