@@ -15,3 +15,8 @@ public class QualityAxesV14Tests {
  [Fact] public void Unavailable_analyzer_issues_are_omitted_from_quality_axes(){var files=new List<FileResult>{File(1),File(9)};RiskCalculator.Calculate(files,new(),false);QualityScoresCalculator.Calculate(files,new());foreach(var f in files){Assert.Null(f.Risk.IssuePercentile);Assert.DoesNotContain("issues",f.Scores.Maintainability.Components.Keys);Assert.DoesNotContain("issues",f.Scores.Architecture.Components.Keys);}}
  static FileResult File(int complexity=1)=>new(){Path="a.cs",Metrics=new(){Loc=10,Complexity=complexity},History=new(){CommitCount=1,Churn=1,AuthorCount=1},Activity=new(){Score=50,EffectiveScore=50}};
 }
+
+public class LatestConfigTests
+{
+ [Fact] public void Obsolete_configuration_properties_are_rejected(){var path=Path.GetTempFileName();try{File.WriteAllText(path,"""{"qualityAxes":{"knowledge":{"enabled":true}}}""");Assert.Throws<System.Text.Json.JsonException>(()=>ConfigLoader.Read(path));}finally{File.Delete(path);}}
+}
