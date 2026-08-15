@@ -1,11 +1,31 @@
 using QualityReporter.CSharp;
 using QualityReporter.CSharp.Coverage;
+using QualityReporter.CSharp.Analysis;
 using QualityReporter.CSharp.Metrics;
 using QualityReporter.CSharp.SymbolExtraction;
 using Xunit;
 
 public sealed class ParserAndMetricsTests
 {
+    [Fact]
+    public void Project_discovery_uses_repository_relative_paths()
+    {
+        var repository = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var project = Path.Combine(repository, "src", "Nested");
+        Directory.CreateDirectory(project);
+        File.WriteAllText(Path.Combine(project, "Program.cs"), "class Program {}");
+
+        try
+        {
+            var file = Assert.Single(SourceFileDiscovery.Discover(project, repository, new()));
+            Assert.Equal("src/Nested/Program.cs", file.RepositoryPath);
+        }
+        finally
+        {
+            Directory.Delete(repository, true);
+        }
+    }
+
     [Fact]
     public void CoberturaParser_aggregates_files_and_branch_coverage()
     {

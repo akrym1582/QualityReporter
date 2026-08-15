@@ -17,7 +17,7 @@ dotnet run --project csharp/src/QualityReporter.CSharp -- analyze \
   --output reports/csharp.json --markdown reports/csharp.md
 ```
 
-`--solution` と `--output` は必須です。`--coverage`、`--analyzer`、`--config`、`--baseline`、`--markdown` は任意です。
+`--solution`（ソリューションファイル）または `--project`（`.csproj` ファイル）のどちらか一方と、`--output` は必須です。プロジェクトだけを解析する場合は、たとえば `--project src/App/App.csproj` を指定します。`--coverage`、`--analyzer`、`--config`、`--baseline`、`--markdown` は任意です。
 
 ### TypeScript / TSX
 
@@ -56,7 +56,7 @@ dotnet build App.sln > build.log 2>&1
 
 C# のアナライザー入力は、たとえば `File.cs(12,3): warning CAxxxx ...` の形式を対象にしています。Roslyn アナライザーやコンパイラー診断を有効にしたビルドを実行してください。
 
-### TypeScript のカバレッジと ESLint
+### TypeScript のカバレッジと ESLint / oxlint
 
 テストランナーが Istanbul 形式を出力する設定でカバレッジを取得します。たとえば c8 では次のように実行できます。
 
@@ -75,6 +75,14 @@ npx eslint ../frontend --format json > ../reports/eslint.json
 
 プロジェクトで ESLint の設定やインストール方法が異なる場合は、そのプロジェクトの設定に合わせて実行してください。生成した JSON を `--eslint` に渡すと、エラー・警告・情報の件数がファイルごとに集計されます。
 
+oxlint の結果も JSON 形式で出力して読み込めます。
+
+```bash
+npx oxlint ../frontend --format json > ../reports/oxlint.json
+```
+
+生成した JSON を `--oxlint` に渡してください。`--eslint` と `--oxlint` を両方指定した場合は、両方の問題件数をファイルごとに合算します。
+
 ### GitHub Actions で取得する場合
 
 GitHub Actions では、チェックアウト時に全履歴を取得し、各ツールの出力をレポート生成より前に作成します。
@@ -88,7 +96,7 @@ GitHub Actions では、チェックアウト時に全履歴を取得し、各�
 - run: npx eslint frontend --format json > reports/eslint.json
 ```
 
-生成された JSON、XML、ログのパスを `--coverage`、`--analyzer`、`--eslint` に指定してください。入力が存在しない、または任意入力を省略した場合、そのメトリクスは `Not Available` として警告され、ゼロとして扱われません。
+生成された JSON、XML、ログのパスを `--coverage`、`--analyzer`、`--eslint` または `--oxlint` に指定してください。入力が存在しない、または任意入力を省略した場合、そのメトリクスは `Not Available` として警告され、ゼロとして扱われません。
 
 ## メトリクス
 
