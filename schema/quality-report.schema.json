@@ -297,7 +297,6 @@
         "maintainability",
         "testability",
         "architecture",
-        "knowledge",
         "overallQuality",
         "hotspotPriority"
       ],
@@ -312,9 +311,6 @@
           "$ref": "#/$defs/axisScore"
         },
         "architecture": {
-          "$ref": "#/$defs/axisScore"
-        },
-        "knowledge": {
           "$ref": "#/$defs/axisScore"
         },
         "overallQuality": {

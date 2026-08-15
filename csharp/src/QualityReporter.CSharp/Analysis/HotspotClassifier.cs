@@ -1,2 +1,67 @@
 namespace QualityReporter.CSharp.Analysis;
-public static class HotspotClassifier { static readonly string[] Order=["critical","untested_complex","duplicated","rework","complex","coupled","untested","new_active","active"];public static void Classify(IEnumerable<FileResult> files,Config c){foreach(var f in files){var x=f.Hotspot.Classifications;x.Clear();var complex=f.Risk.ComplexityPercentile>=c.Classification.HighComplexityPercentile||f.Functions.Any(fn=>fn.Complexity>=c.Functions.ComplexityWarning);var rework=f.Risk.ReworkPercentile>=c.Classification.HighReworkPercentile||f.History.ReworkRate>=.5;var untested=f.Metrics.LineCoverage<c.Classification.LowCoverage&&(f.Activity.EffectiveScore>=c.Classification.HighActivity||complex||rework);var coupled=f.Couplings.Any(z=>z.Count>=c.Coupling.MinCount&&z.Ratio>=c.Coupling.MinRatio);var untestedComplex=f.Metrics.UntestedComplexity is{} u&&((f.Metrics.Complexity>=c.UntestedComplexity.ComplexityWarning&&f.Metrics.LineCoverage/100<c.UntestedComplexity.LowCoverage)||u.Percentile>=.8);var duplicated=f.Metrics.Duplication is{} d&&(d.DuplicatedPercentage>=c.Duplication.WarningPercentage||d.RiskPercentile>=.8);if(complex)x.Add("complex");if(rework)x.Add("rework");if(untestedComplex)x.Add("untested_complex");if(duplicated)x.Add("duplicated");if(untested)x.Add("untested");if(coupled)x.Add("coupled");if(f.History.FileAgeDays<=30&&f.Activity.Score>=70&&f.Risk.Score<60)x.Add("new_active");if(f.Activity.EffectiveScore>=70&&f.Risk.Score<40)x.Add("active");if(f.Hotspot.PriorityScore>=c.Classification.CriticalPriority&&x.Count(z=>new[]{"complex","rework","untested_complex","coupled","duplicated"}.Contains(z))>=2)x.Add("critical");f.Hotspot.PrimaryClassification=Order.FirstOrDefault(x.Contains);}}}
+
+public static class HotspotClassifier
+{
+    private static readonly string[] ClassificationOrder =
+    [
+        "critical",
+        "untested_complex",
+        "duplicated",
+        "rework",
+        "complex",
+        "coupled",
+        "untested",
+        "new_active",
+        "active"
+    ];
+
+    private static readonly HashSet<string> CriticalSignals =
+    [
+        "complex",
+        "rework",
+        "untested_complex",
+        "coupled",
+        "duplicated"
+    ];
+
+    public static void Classify(IEnumerable<FileResult> files, Config config)
+    {
+        foreach (var file in files)
+        {
+            Classify(file, config);
+        }
+    }
+
+    private static void Classify(FileResult file, Config config)
+    {
+        var classifications = file.Hotspot.Classifications;
+        classifications.Clear();
+
+        var isComplex = HotspotClassificationRules.IsComplex(file, config);
+        var hasRework = HotspotClassificationRules.HasRework(file, config);
+
+        AddIf(classifications, "complex", isComplex);
+        AddIf(classifications, "rework", hasRework);
+        AddIf(classifications, "untested_complex", HotspotClassificationRules.IsUntestedComplex(file, config));
+        AddIf(classifications, "duplicated", HotspotClassificationRules.IsDuplicated(file, config));
+        AddIf(classifications, "untested", HotspotClassificationRules.IsUntested(file, config, isComplex, hasRework));
+        AddIf(classifications, "coupled", HotspotClassificationRules.IsCoupled(file, config));
+        AddIf(classifications, "new_active", HotspotClassificationRules.IsNewAndActive(file));
+        AddIf(classifications, "active", HotspotClassificationRules.IsActive(file));
+        AddIf(classifications, "critical", IsCritical(file, config, classifications));
+
+        file.Hotspot.PrimaryClassification = ClassificationOrder.FirstOrDefault(classifications.Contains);
+    }
+
+    private static bool IsCritical(FileResult file, Config config, IEnumerable<string> classifications) =>
+        file.Hotspot.PriorityScore >= config.Classification.CriticalPriority
+        && classifications.Count(CriticalSignals.Contains) >= 2;
+
+    private static void AddIf(ICollection<string> classifications, string classification, bool condition)
+    {
+        if (condition)
+        {
+            classifications.Add(classification);
+        }
+    }
+}

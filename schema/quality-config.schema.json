@@ -258,7 +258,9 @@
                 }
               }
             }
-          }
+          },
+          "deprecated": true,
+          "description": "Legacy v1.4 setting accepted for backwards compatibility; Knowledge risk is no longer calculated."
         }
       }
     },

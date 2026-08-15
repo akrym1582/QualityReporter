@@ -1,11 +1,97 @@
 namespace QualityReporter.CSharp.Analysis;
-internal static class Percentiles
-{
- internal static void Set<T>(List<FileResult> fs,Func<FileResult,T> value,Action<FileResult,double> set) where T:IComparable<T>{if(fs.Count==0)return;var sorted=fs.Select(value).Order().ToList();var same=sorted.Count<2||sorted[0].CompareTo(sorted[^1])==0;foreach(var f in fs){var v=value(f);var below=sorted.Count(x=>x.CompareTo(v)<0);var equal=sorted.Count(x=>x.CompareTo(v)==0);set(f,same?0:(below+(equal-1)/2d)/(sorted.Count-1));}}
- internal static double Weighted(params (double? Value,double Weight)[] terms){var a=terms.Where(x=>x.Value.HasValue&&x.Weight>0).ToList();return a.Count==0?0:Math.Round(a.Sum(x=>x.Value!.Value*x.Weight)/a.Sum(x=>x.Weight)*100,1);}
-}
+
 public static class RiskCalculator
 {
- public static void Calculate(List<FileResult> files,RiskWeights w,bool issuesAvailable=true){Percentiles.Set(files,x=>x.History.ReworkRate,(f,p)=>f.Risk.ReworkPercentile=p);Percentiles.Set(files,x=>x.Metrics.Complexity,(f,p)=>f.Risk.ComplexityPercentile=p);Percentiles.Set(files,x=>x.Couplings.Select(c=>c.Ratio).DefaultIfEmpty().Max(),(f,p)=>f.Risk.CouplingRiskPercentile=p);if(issuesAvailable)Percentiles.Set(files,x=>x.Metrics.Issues.Error+x.Metrics.Issues.Warning+x.Metrics.Issues.Info,(f,p)=>f.Risk.IssuePercentile=p);var covered=files.Where(x=>x.Metrics.LineCoverage.HasValue).ToList();Percentiles.Set(covered,x=>-x.Metrics.LineCoverage!.Value,(f,p)=>f.Risk.CoverageRiskPercentile=p);var uc=files.Where(x=>x.Metrics.UntestedComplexity is not null).ToList();Percentiles.Set(uc,x=>x.Metrics.UntestedComplexity!.Raw,(f,p)=>f.Metrics.UntestedComplexity!.Percentile=p);var duplicated=files.Where(x=>x.Metrics.Duplication is not null).ToList();Percentiles.Set(duplicated,x=>DuplicationRiskCalculator.Calculate(x.Metrics.Duplication!.DuplicatedPercentage,x.Activity.EffectiveScore),(f,p)=>{f.Metrics.Duplication!.RiskPercentile=p;f.Risk.DuplicationRiskPercentile=p;});foreach(var f in files){f.Risk.MaintainabilityScore=Percentiles.Weighted((f.Risk.ComplexityPercentile,w.Complexity),(f.Risk.ReworkPercentile,w.Rework),(f.Risk.DuplicationRiskPercentile,w.Duplication),(f.Risk.CouplingRiskPercentile,w.Coupling),(f.Risk.IssuePercentile,w.Issues));f.Risk.TestScore=f.Risk.CoverageRiskPercentile.HasValue?Percentiles.Weighted((f.Risk.CoverageRiskPercentile,w.CoverageRisk),(f.Metrics.UntestedComplexity?.Percentile,w.UntestedComplexity)):null;f.Risk.ArchitectureScore=Percentiles.Weighted((f.Risk.CouplingRiskPercentile,1));f.Risk.Score=Percentiles.Weighted((f.Risk.MaintainabilityScore/100,.5),(f.Risk.TestScore/100,.3),(f.Risk.ArchitectureScore/100,.2));f.Risk.Level=f.Risk.Score>=80?"critical":f.Risk.Score>=60?"high":f.Risk.Score>=40?"medium":"low";}}
+    public static void Calculate(
+        List<FileResult> files,
+        RiskWeights weights,
+        bool issuesAvailable = true)
+    {
+        SetAlwaysAvailablePercentiles(files);
+        SetOptionalPercentiles(files, issuesAvailable);
+
+        foreach (var file in files)
+        {
+            CalculateScores(file, weights);
+        }
+    }
+
+    private static void SetAlwaysAvailablePercentiles(List<FileResult> files)
+    {
+        Percentiles.Set(files, file => file.History.ReworkRate,
+            (file, percentile) => file.Risk.ReworkPercentile = percentile);
+        Percentiles.Set(files, file => file.Metrics.Complexity,
+            (file, percentile) => file.Risk.ComplexityPercentile = percentile);
+        Percentiles.Set(files, MaximumCouplingRatio,
+            (file, percentile) => file.Risk.CouplingRiskPercentile = percentile);
+    }
+
+    private static void SetOptionalPercentiles(List<FileResult> files, bool issuesAvailable)
+    {
+        if (issuesAvailable)
+        {
+            Percentiles.Set(files, IssueCount,
+                (file, percentile) => file.Risk.IssuePercentile = percentile);
+        }
+
+        var filesWithCoverage = files.Where(file => file.Metrics.LineCoverage.HasValue).ToList();
+        Percentiles.Set(filesWithCoverage, file => -file.Metrics.LineCoverage!.Value,
+            (file, percentile) => file.Risk.CoverageRiskPercentile = percentile);
+
+        var filesWithUntestedComplexity = files
+            .Where(file => file.Metrics.UntestedComplexity is not null)
+            .ToList();
+        Percentiles.Set(filesWithUntestedComplexity, file => file.Metrics.UntestedComplexity!.Raw,
+            (file, percentile) => file.Metrics.UntestedComplexity!.Percentile = percentile);
+
+        var filesWithDuplication = files.Where(file => file.Metrics.Duplication is not null).ToList();
+        Percentiles.Set(filesWithDuplication, DuplicationRisk, SetDuplicationPercentile);
+    }
+
+    private static double MaximumCouplingRatio(FileResult file) =>
+        file.Couplings.Select(coupling => coupling.Ratio).DefaultIfEmpty().Max();
+
+    private static int IssueCount(FileResult file) =>
+        file.Metrics.Issues.Error + file.Metrics.Issues.Warning + file.Metrics.Issues.Info;
+
+    private static double DuplicationRisk(FileResult file) =>
+        DuplicationRiskCalculator.Calculate(
+            file.Metrics.Duplication!.DuplicatedPercentage,
+            file.Activity.EffectiveScore);
+
+    private static void SetDuplicationPercentile(FileResult file, double percentile)
+    {
+        file.Metrics.Duplication!.RiskPercentile = percentile;
+        file.Risk.DuplicationRiskPercentile = percentile;
+    }
+
+    private static void CalculateScores(FileResult file, RiskWeights weights)
+    {
+        file.Risk.MaintainabilityScore = Percentiles.Weighted(
+            (file.Risk.ComplexityPercentile, weights.Complexity),
+            (file.Risk.ReworkPercentile, weights.Rework),
+            (file.Risk.DuplicationRiskPercentile, weights.Duplication),
+            (file.Risk.CouplingRiskPercentile, weights.Coupling),
+            (file.Risk.IssuePercentile, weights.Issues));
+
+        file.Risk.TestScore = file.Risk.CoverageRiskPercentile.HasValue
+            ? Percentiles.Weighted(
+                (file.Risk.CoverageRiskPercentile, weights.CoverageRisk),
+                (file.Metrics.UntestedComplexity?.Percentile, weights.UntestedComplexity))
+            : null;
+        file.Risk.ArchitectureScore = Percentiles.Weighted((file.Risk.CouplingRiskPercentile, 1));
+        file.Risk.Score = Percentiles.Weighted(
+            (file.Risk.MaintainabilityScore / 100, .5),
+            (file.Risk.TestScore / 100, .3),
+            (file.Risk.ArchitectureScore / 100, .2));
+        file.Risk.Level = RiskLevel(file.Risk.Score);
+    }
+
+    private static string RiskLevel(double score) => score switch
+    {
+        >= 80 => "critical",
+        >= 60 => "high",
+        >= 40 => "medium",
+        _ => "low"
+    };
 }
-public static class BaselineComparer { public static object Compare(Report current,Report old){var now=current.Files.ToDictionary(x=>x.Path);var before=old.Files.ToDictionary(x=>x.Path);return new{newCritical=now.Values.Where(x=>x.Risk.Level=="critical"&&(!before.TryGetValue(x.Path,out var b)||b.Risk.Level!="critical")).Select(x=>x.Path),resolvedCritical=before.Values.Where(x=>x.Risk.Level=="critical"&&(!now.TryGetValue(x.Path,out var n)||n.Risk.Level!="critical")).Select(x=>x.Path),newHotspots=now.Values.Where(x=>x.Hotspot.PriorityScore>=60&&(!before.TryGetValue(x.Path,out var b)||b.Hotspot.PriorityScore<60)).Select(x=>x.Path),resolvedHotspots=before.Values.Where(x=>x.Hotspot.PriorityScore>=60&&(!now.TryGetValue(x.Path,out var n)||n.Hotspot.PriorityScore<60)).Select(x=>x.Path),riskIncreased=now.Values.Where(x=>before.TryGetValue(x.Path,out var b)&&x.Risk.Score>b.Risk.Score).Select(x=>x.Path),riskDecreased=now.Values.Where(x=>before.TryGetValue(x.Path,out var b)&&x.Risk.Score<b.Risk.Score).Select(x=>x.Path),priorityIncreased=now.Values.Where(x=>before.TryGetValue(x.Path,out var b)&&x.Hotspot.PriorityScore>b.Hotspot.PriorityScore).Select(x=>x.Path),priorityDecreased=now.Values.Where(x=>before.TryGetValue(x.Path,out var b)&&x.Hotspot.PriorityScore<b.Hotspot.PriorityScore).Select(x=>x.Path),newUntestedComplexMethods=now.Values.Where(x=>x.Hotspot.Classifications.Contains("untested_complex")&&(!before.TryGetValue(x.Path,out var b)||!b.Hotspot.Classifications.Contains("untested_complex"))).Select(x=>x.Path),newDuplicateHotspots=now.Values.Where(x=>x.Hotspot.Classifications.Contains("duplicated")&&x.Hotspot.PriorityScore>=80&&(!before.TryGetValue(x.Path,out var b)||!b.Hotspot.Classifications.Contains("duplicated"))).Select(x=>x.Path)};}}

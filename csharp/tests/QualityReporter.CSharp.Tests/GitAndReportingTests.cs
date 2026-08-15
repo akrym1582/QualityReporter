@@ -69,6 +69,8 @@ public sealed class GitAndReportingTests
             Assert.Contains("Coverage: Not Available", text);
             Assert.Contains("src/B.cs", text);
             Assert.Contains("Run", text);
+            Assert.DoesNotContain("Knowledge", text);
+            Assert.DoesNotContain("\"knowledge\"", File.ReadAllText(json), StringComparison.OrdinalIgnoreCase);
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
