@@ -6,7 +6,8 @@ namespace QualityReporter.Trend;
 
 public static class SnapshotBuilder
 {
-    private static readonly string[] ScoreNames = ["activity", "maintainability", "testability", "architecture", "knowledge", "overallQuality", "hotspotPriority"];
+    public const string CurrentScoreModelVersion = "3";
+    private static readonly string[] ScoreNames = ["activity", "maintainability", "testability", "architecture", "overallQuality", "hotspotPriority"];
     public static QualitySnapshot Build(IEnumerable<string> reports, string sourceCommit, DateTimeOffset generatedAt, string version, string modelVersion, string? policyPath)
     {
         var files = new List<SnapshotEntity>();
