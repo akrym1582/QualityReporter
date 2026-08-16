@@ -22,3 +22,43 @@ jobs:
       - name: Run TypeScript unit tests
         working-directory: typescript
         run: npm test
+      - name: Run TypeScript smoke test
+        run: |
+          set +e
+          mkdir -p smoke-artifacts
+          (
+            cd typescript
+            npm run build
+            node dist/cli.js analyze \
+              --root . \
+              --output ../smoke-artifacts/typescript-smoke.json \
+              --markdown ../smoke-artifacts/typescript-smoke.md
+          )
+          status=$?
+          python3 - "$status" <<'PY'
+          from pathlib import Path
+          from xml.sax.saxutils import escape
+          import sys
+
+          status = int(sys.argv[1])
+          report = Path("smoke-artifacts/typescript-smoke.md")
+          lines = report.read_text().splitlines()[:18] if report.exists() else ["Smoke test did not produce a report."]
+          text = ["Smoke test: " + ("passed" if status == 0 else "failed"), *lines]
+          rendered = "\n".join(
+              f'<text x="24" y="{42 + index * 22}" '
+              f'font-family="monospace" font-size="16">{escape(line[:120])}</text>'
+              for index, line in enumerate(text)
+          )
+          Path("smoke-artifacts/typescript-smoke.svg").write_text(
+              f'<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="{max(100, 60 + len(text) * 22)}">'
+              f'<rect width="100%" height="100%" fill="white"/>{rendered}</svg>'
+          )
+          PY
+          exit "$status"
+      - name: Upload TypeScript smoke-test image
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-smoke-test-image
+          path: smoke-artifacts/typescript-smoke.svg
+          if-no-files-found: warn

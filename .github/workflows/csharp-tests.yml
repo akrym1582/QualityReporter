@@ -18,3 +18,39 @@ jobs:
         with: { dotnet-version: "10.x" }
       - name: Run C# unit tests
         run: dotnet test csharp/QualityReporter.CSharp.slnx --collect:"XPlat Code Coverage"
+      - name: Run C# smoke test
+        run: |
+          set +e
+          mkdir -p smoke-artifacts
+          dotnet run --project csharp/src/QualityReporter.CSharp -- analyze \
+            --solution csharp/QualityReporter.CSharp.slnx \
+            --output smoke-artifacts/csharp-smoke.json \
+            --markdown smoke-artifacts/csharp-smoke.md
+          status=$?
+          python3 - "$status" <<'PY'
+          from pathlib import Path
+          from xml.sax.saxutils import escape
+          import sys
+
+          status = int(sys.argv[1])
+          report = Path("smoke-artifacts/csharp-smoke.md")
+          lines = report.read_text().splitlines()[:18] if report.exists() else ["Smoke test did not produce a report."]
+          text = ["Smoke test: " + ("passed" if status == 0 else "failed"), *lines]
+          rendered = "\n".join(
+              f'<text x="24" y="{42 + index * 22}" '
+              f'font-family="monospace" font-size="16">{escape(line[:120])}</text>'
+              for index, line in enumerate(text)
+          )
+          Path("smoke-artifacts/csharp-smoke.svg").write_text(
+              f'<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="{max(100, 60 + len(text) * 22)}">'
+              f'<rect width="100%" height="100%" fill="white"/>{rendered}</svg>'
+          )
+          PY
+          exit "$status"
+      - name: Upload C# smoke-test image
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: csharp-smoke-test-image
+          path: smoke-artifacts/csharp-smoke.svg
+          if-no-files-found: warn
